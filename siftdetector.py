@@ -6,15 +6,15 @@ from scipy.stats import multivariate_normal
 from numpy.linalg import norm
 import numpy.linalg
 
-# INPUTS: imagename (filename of image, string) 
+# INPUTS: imagename (filename of image, string)
 #         threshold (constrast threshold, int or float)
 # OUTPUT: keypoints (an array of four column, where the first is the x location, the second is the y location, the third is the scale, and the fourth is the orientation)
 #         descriptors (an array of 128 columns, which correspond to the SIFT descriptor)
 
 def detect_keypoints(imagename, threshold):
-    # SIFT Detector 
+    # SIFT Detector
     #--------------
-     
+
     original = ndimage.imread(imagename, flatten=True)
 
     # SIFT Parameters
@@ -45,8 +45,8 @@ def detect_keypoints(imagename, threshold):
 
     # Construct Gaussian pyramids
     for i in range(0, 6):
-	pyrlvl1[:,:,i] = ndimage.filters.gaussian_filter(doubled, kvec1[i])   
-	pyrlvl2[:,:,i] = misc.imresize(ndimage.filters.gaussian_filter(doubled, kvec2[i]), 50, 'bilinear') 
+	pyrlvl1[:,:,i] = ndimage.filters.gaussian_filter(doubled, kvec1[i])
+	pyrlvl2[:,:,i] = misc.imresize(ndimage.filters.gaussian_filter(doubled, kvec2[i]), 50, 'bilinear')
 	pyrlvl3[:,:,i] = misc.imresize(ndimage.filters.gaussian_filter(doubled, kvec3[i]), 25, 'bilinear')
 	pyrlvl4[:,:,i] = misc.imresize(ndimage.filters.gaussian_filter(doubled, kvec4[i]), 1.0 / 8.0, 'bilinear')
 
@@ -72,13 +72,13 @@ def detect_keypoints(imagename, threshold):
     print "Starting extrema detection..."
     print "First octave"
 
-    # In each of the following for loops, elements of each pyramids that are larger or smaller than its 26 immediate neighbors in space and scale are labeled as extrema. As explained in section 4 of Lowe's paper, these initial extrema are pruned by checking that their contrast and curvature are above certain thresholds. The thresholds used here are those suggested by Lowe. 
+    # In each of the following for loops, elements of each pyramids that are larger or smaller than its 26 immediate neighbors in space and scale are labeled as extrema. As explained in section 4 of Lowe's paper, these initial extrema are pruned by checking that their contrast and curvature are above certain thresholds. The thresholds used here are those suggested by Lowe.
 
     for i in range(1, 4):
 	for j in range(80, doubled.shape[0] - 80):
 	    for k in range(80, doubled.shape[1] - 80):
 		if np.absolute(diffpyrlvl1[j, k, i]) < threshold:
-		    continue	    
+		    continue
 
 		maxbool = (diffpyrlvl1[j, k, i] > 0)
 		minbool = (diffpyrlvl1[j, k, i] < 0)
@@ -98,23 +98,23 @@ def detect_keypoints(imagename, threshold):
 
 		    if not maxbool and not minbool:
 			break
-		
+
 		if maxbool or minbool:
 		    dx = (diffpyrlvl1[j, k+1, i] - diffpyrlvl1[j, k-1, i]) * 0.5 / 255
 		    dy = (diffpyrlvl1[j+1, k, i] - diffpyrlvl1[j-1, k, i]) * 0.5 / 255
 		    ds = (diffpyrlvl1[j, k, i+1] - diffpyrlvl1[j, k, i-1]) * 0.5 / 255
-		    dxx = (diffpyrlvl1[j, k+1, i] + diffpyrlvl1[j, k-1, i] - 2 * diffpyrlvl1[j, k, i]) * 1.0 / 255        
-		    dyy = (diffpyrlvl1[j+1, k, i] + diffpyrlvl1[j-1, k, i] - 2 * diffpyrlvl1[j, k, i]) * 1.0 / 255          
+		    dxx = (diffpyrlvl1[j, k+1, i] + diffpyrlvl1[j, k-1, i] - 2 * diffpyrlvl1[j, k, i]) * 1.0 / 255
+		    dyy = (diffpyrlvl1[j+1, k, i] + diffpyrlvl1[j-1, k, i] - 2 * diffpyrlvl1[j, k, i]) * 1.0 / 255
 		    dss = (diffpyrlvl1[j, k, i+1] + diffpyrlvl1[j, k, i-1] - 2 * diffpyrlvl1[j, k, i]) * 1.0 / 255
-		    dxy = (diffpyrlvl1[j+1, k+1, i] - diffpyrlvl1[j+1, k-1, i] - diffpyrlvl1[j-1, k+1, i] + diffpyrlvl1[j-1, k-1, i]) * 0.25 / 255 
-		    dxs = (diffpyrlvl1[j, k+1, i+1] - diffpyrlvl1[j, k-1, i+1] - diffpyrlvl1[j, k+1, i-1] + diffpyrlvl1[j, k-1, i-1]) * 0.25 / 255 
-		    dys = (diffpyrlvl1[j+1, k, i+1] - diffpyrlvl1[j-1, k, i+1] - diffpyrlvl1[j+1, k, i-1] + diffpyrlvl1[j-1, k, i-1]) * 0.25 / 255  
-		    
+		    dxy = (diffpyrlvl1[j+1, k+1, i] - diffpyrlvl1[j+1, k-1, i] - diffpyrlvl1[j-1, k+1, i] + diffpyrlvl1[j-1, k-1, i]) * 0.25 / 255
+		    dxs = (diffpyrlvl1[j, k+1, i+1] - diffpyrlvl1[j, k-1, i+1] - diffpyrlvl1[j, k+1, i-1] + diffpyrlvl1[j, k-1, i-1]) * 0.25 / 255
+		    dys = (diffpyrlvl1[j+1, k, i+1] - diffpyrlvl1[j-1, k, i+1] - diffpyrlvl1[j+1, k, i-1] + diffpyrlvl1[j-1, k, i-1]) * 0.25 / 255
+
 		    dD = np.matrix([[dx], [dy], [ds]])
 		    H = np.matrix([[dxx, dxy, dxs], [dxy, dyy, dys], [dxs, dys, dss]])
 		    x_hat = numpy.linalg.lstsq(H, dD)[0]
 		    D_x_hat = diffpyrlvl1[j, k, i] + 0.5 * np.dot(dD.transpose(), x_hat)
-		 
+
 		    r = 10.0
 		    if ((((dxx + dyy) ** 2) * r) < (dxx * dyy - (dxy ** 2)) * (((r + 1) ** 2))) and (np.absolute(x_hat[0]) < 0.5) and (np.absolute(x_hat[1]) < 0.5) and (np.absolute(x_hat[2]) < 0.5) and (np.absolute(D_x_hat) > 0.03):
 			extrpyrlvl1[j, k, i - 1] = 1
@@ -125,11 +125,11 @@ def detect_keypoints(imagename, threshold):
 	for j in range(40, normal.shape[0] - 40):
 	    for k in range(40, normal.shape[1] - 40):
 		if np.absolute(diffpyrlvl2[j, k, i]) < threshold:
-		    continue	    
+		    continue
 
 		maxbool = (diffpyrlvl2[j, k, i] > 0)
 		minbool = (diffpyrlvl2[j, k, i] < 0)
-		
+
 		for di in range(-1, 2):
 		    for dj in range(-1, 2):
 			for dk in range(-1, 2):
@@ -145,18 +145,18 @@ def detect_keypoints(imagename, threshold):
 
 		    if not maxbool and not minbool:
 			break
-		
+
 		if maxbool or minbool:
 		    dx = (diffpyrlvl2[j, k+1, i] - diffpyrlvl2[j, k-1, i]) * 0.5 / 255
 		    dy = (diffpyrlvl2[j+1, k, i] - diffpyrlvl2[j-1, k, i]) * 0.5 / 255
 		    ds = (diffpyrlvl2[j, k, i+1] - diffpyrlvl2[j, k, i-1]) * 0.5 / 255
-		    dxx = (diffpyrlvl2[j, k+1, i] + diffpyrlvl2[j, k-1, i] - 2 * diffpyrlvl2[j, k, i]) * 1.0 / 255        
-		    dyy = (diffpyrlvl2[j+1, k, i] + diffpyrlvl2[j-1, k, i] - 2 * diffpyrlvl2[j, k, i]) * 1.0 / 255          
+		    dxx = (diffpyrlvl2[j, k+1, i] + diffpyrlvl2[j, k-1, i] - 2 * diffpyrlvl2[j, k, i]) * 1.0 / 255
+		    dyy = (diffpyrlvl2[j+1, k, i] + diffpyrlvl2[j-1, k, i] - 2 * diffpyrlvl2[j, k, i]) * 1.0 / 255
 		    dss = (diffpyrlvl2[j, k, i+1] + diffpyrlvl2[j, k, i-1] - 2 * diffpyrlvl2[j, k, i]) * 1.0 / 255
-		    dxy = (diffpyrlvl2[j+1, k+1, i] - diffpyrlvl2[j+1, k-1, i] - diffpyrlvl2[j-1, k+1, i] + diffpyrlvl2[j-1, k-1, i]) * 0.25 / 255 
-		    dxs = (diffpyrlvl2[j, k+1, i+1] - diffpyrlvl2[j, k-1, i+1] - diffpyrlvl2[j, k+1, i-1] + diffpyrlvl2[j, k-1, i-1]) * 0.25 / 255 
-		    dys = (diffpyrlvl2[j+1, k, i+1] - diffpyrlvl2[j-1, k, i+1] - diffpyrlvl2[j+1, k, i-1] + diffpyrlvl2[j-1, k, i-1]) * 0.25 / 255  
-		    
+		    dxy = (diffpyrlvl2[j+1, k+1, i] - diffpyrlvl2[j+1, k-1, i] - diffpyrlvl2[j-1, k+1, i] + diffpyrlvl2[j-1, k-1, i]) * 0.25 / 255
+		    dxs = (diffpyrlvl2[j, k+1, i+1] - diffpyrlvl2[j, k-1, i+1] - diffpyrlvl2[j, k+1, i-1] + diffpyrlvl2[j, k-1, i-1]) * 0.25 / 255
+		    dys = (diffpyrlvl2[j+1, k, i+1] - diffpyrlvl2[j-1, k, i+1] - diffpyrlvl2[j+1, k, i-1] + diffpyrlvl2[j-1, k, i-1]) * 0.25 / 255
+
 		    dD = np.matrix([[dx], [dy], [ds]])
 		    H = np.matrix([[dxx, dxy, dxs], [dxy, dyy, dys], [dxs, dys, dss]])
 		    x_hat = numpy.linalg.lstsq(H, dD)[0]
@@ -167,16 +167,16 @@ def detect_keypoints(imagename, threshold):
 			extrpyrlvl2[j, k, i - 1] = 1
 
     print "Third octave"
-      
+
     for i in range(1, 4):
 	for j in range(20, halved.shape[0] - 20):
 	    for k in range(20, halved.shape[1] - 20):
 		if np.absolute(diffpyrlvl3[j, k, i]) < threshold:
-		    continue	    
+		    continue
 
 		maxbool = (diffpyrlvl3[j, k, i] > 0)
 		minbool = (diffpyrlvl3[j, k, i] < 0)
-		
+
 		for di in range(-1, 2):
 		    for dj in range(-1, 2):
 			for dk in range(-1, 2):
@@ -192,18 +192,18 @@ def detect_keypoints(imagename, threshold):
 
 		    if not maxbool and not minbool:
 			break
-		
+
 		if maxbool or minbool:
 		    dx = (diffpyrlvl3[j, k+1, i] - diffpyrlvl3[j, k-1, i]) * 0.5 / 255
 		    dy = (diffpyrlvl3[j+1, k, i] - diffpyrlvl3[j-1, k, i]) * 0.5 / 255
 		    ds = (diffpyrlvl3[j, k, i+1] - diffpyrlvl3[j, k, i-1]) * 0.5 / 255
-		    dxx = (diffpyrlvl3[j, k+1, i] + diffpyrlvl3[j, k-1, i] - 2 * diffpyrlvl3[j, k, i]) * 1.0 / 255        
-		    dyy = (diffpyrlvl3[j+1, k, i] + diffpyrlvl3[j-1, k, i] - 2 * diffpyrlvl3[j, k, i]) * 1.0 / 255          
+		    dxx = (diffpyrlvl3[j, k+1, i] + diffpyrlvl3[j, k-1, i] - 2 * diffpyrlvl3[j, k, i]) * 1.0 / 255
+		    dyy = (diffpyrlvl3[j+1, k, i] + diffpyrlvl3[j-1, k, i] - 2 * diffpyrlvl3[j, k, i]) * 1.0 / 255
 		    dss = (diffpyrlvl3[j, k, i+1] + diffpyrlvl3[j, k, i-1] - 2 * diffpyrlvl3[j, k, i]) * 1.0 / 255
-		    dxy = (diffpyrlvl3[j+1, k+1, i] - diffpyrlvl3[j+1, k-1, i] - diffpyrlvl3[j-1, k+1, i] + diffpyrlvl3[j-1, k-1, i]) * 0.25 / 255 
-		    dxs = (diffpyrlvl3[j, k+1, i+1] - diffpyrlvl3[j, k-1, i+1] - diffpyrlvl3[j, k+1, i-1] + diffpyrlvl3[j, k-1, i-1]) * 0.25 / 255 
-		    dys = (diffpyrlvl3[j+1, k, i+1] - diffpyrlvl3[j-1, k, i+1] - diffpyrlvl3[j+1, k, i-1] + diffpyrlvl3[j-1, k, i-1]) * 0.25 / 255  
-		    
+		    dxy = (diffpyrlvl3[j+1, k+1, i] - diffpyrlvl3[j+1, k-1, i] - diffpyrlvl3[j-1, k+1, i] + diffpyrlvl3[j-1, k-1, i]) * 0.25 / 255
+		    dxs = (diffpyrlvl3[j, k+1, i+1] - diffpyrlvl3[j, k-1, i+1] - diffpyrlvl3[j, k+1, i-1] + diffpyrlvl3[j, k-1, i-1]) * 0.25 / 255
+		    dys = (diffpyrlvl3[j+1, k, i+1] - diffpyrlvl3[j-1, k, i+1] - diffpyrlvl3[j+1, k, i-1] + diffpyrlvl3[j-1, k, i-1]) * 0.25 / 255
+
 		    dD = np.matrix([[dx], [dy], [ds]])
 		    H = np.matrix([[dxx, dxy, dxs], [dxy, dyy, dys], [dxs, dys, dss]])
 		    x_hat = numpy.linalg.lstsq(H, dD)[0]
@@ -212,19 +212,19 @@ def detect_keypoints(imagename, threshold):
 		    r = 10.0
 		    if (((dxx + dyy) ** 2) * r) < (dxx * dyy - (dxy ** 2)) * (((r + 1) ** 2)) and np.absolute(x_hat[0]) < 0.5 and np.absolute(x_hat[1]) < 0.5 and np.absolute(x_hat[2]) < 0.5 and np.absolute(D_x_hat) > 0.03:
 			extrpyrlvl3[j, k, i - 1] = 1
-		    
-		      
+
+
     print "Fourth octave"
 
     for i in range(1, 4):
 	for j in range(10, quartered.shape[0] - 10):
 	    for k in range(10, quartered.shape[1] - 10):
 		if np.absolute(diffpyrlvl4[j, k, i]) < threshold:
-		    continue	    
+		    continue
 
 		maxbool = (diffpyrlvl4[j, k, i] > 0)
 		minbool = (diffpyrlvl4[j, k, i] < 0)
-		
+
 		for di in range(-1, 2):
 		    for dj in range(-1, 2):
 			for dk in range(-1, 2):
@@ -240,18 +240,18 @@ def detect_keypoints(imagename, threshold):
 
 		    if not maxbool and not minbool:
 			break
-		
+
 		if maxbool or minbool:
 		    dx = (diffpyrlvl4[j, k+1, i] - diffpyrlvl4[j, k-1, i]) * 0.5 / 255
 		    dy = (diffpyrlvl4[j+1, k, i] - diffpyrlvl4[j-1, k, i]) * 0.5 / 255
 		    ds = (diffpyrlvl4[j, k, i+1] - diffpyrlvl4[j, k, i-1]) * 0.5 / 255
-		    dxx = (diffpyrlvl4[j, k+1, i] + diffpyrlvl4[j, k-1, i] - 2 * diffpyrlvl4[j, k, i]) * 1.0 / 255        
-		    dyy = (diffpyrlvl4[j+1, k, i] + diffpyrlvl4[j-1, k, i] - 2 * diffpyrlvl4[j, k, i]) * 1.0 / 255          
+		    dxx = (diffpyrlvl4[j, k+1, i] + diffpyrlvl4[j, k-1, i] - 2 * diffpyrlvl4[j, k, i]) * 1.0 / 255
+		    dyy = (diffpyrlvl4[j+1, k, i] + diffpyrlvl4[j-1, k, i] - 2 * diffpyrlvl4[j, k, i]) * 1.0 / 255
 		    dss = (diffpyrlvl4[j, k, i+1] + diffpyrlvl4[j, k, i-1] - 2 * diffpyrlvl4[j, k, i]) * 1.0 / 255
-		    dxy = (diffpyrlvl4[j+1, k+1, i] - diffpyrlvl4[j+1, k-1, i] - diffpyrlvl4[j-1, k+1, i] + diffpyrlvl4[j-1, k-1, i]) * 0.25 / 255 
-		    dxs = (diffpyrlvl4[j, k+1, i+1] - diffpyrlvl4[j, k-1, i+1] - diffpyrlvl4[j, k+1, i-1] + diffpyrlvl4[j, k-1, i-1]) * 0.25 / 255 
-		    dys = (diffpyrlvl4[j+1, k, i+1] - diffpyrlvl4[j-1, k, i+1] - diffpyrlvl4[j+1, k, i-1] + diffpyrlvl4[j-1, k, i-1]) * 0.25 / 255  
-		    
+		    dxy = (diffpyrlvl4[j+1, k+1, i] - diffpyrlvl4[j+1, k-1, i] - diffpyrlvl4[j-1, k+1, i] + diffpyrlvl4[j-1, k-1, i]) * 0.25 / 255
+		    dxs = (diffpyrlvl4[j, k+1, i+1] - diffpyrlvl4[j, k-1, i+1] - diffpyrlvl4[j, k+1, i-1] + diffpyrlvl4[j, k-1, i-1]) * 0.25 / 255
+		    dys = (diffpyrlvl4[j+1, k, i+1] - diffpyrlvl4[j-1, k, i+1] - diffpyrlvl4[j+1, k, i-1] + diffpyrlvl4[j-1, k, i-1]) * 0.25 / 255
+
 		    dD = np.matrix([[dx], [dy], [ds]])
 		    H = np.matrix([[dxx, dxy, dxs], [dxy, dyy, dys], [dxs, dys, dss]])
 		    x_hat = numpy.linalg.lstsq(H, dD)[0]
@@ -260,13 +260,13 @@ def detect_keypoints(imagename, threshold):
 		    r = 10.0
 		    if (((dxx + dyy) ** 2) * r) < (dxx * dyy - (dxy ** 2)) * (((r + 1) ** 2)) and np.absolute(x_hat[0]) < 0.5 and np.absolute(x_hat[1]) < 0.5 and np.absolute(x_hat[2]) < 0.5 and np.absolute(D_x_hat) > 0.03:
 			extrpyrlvl4[j, k, i - 1] = 1
-		     
-	      
+
+
     print "Number of extrema in first octave: %d" % np.sum(extrpyrlvl1)
     print "Number of extrema in second octave: %d" % np.sum(extrpyrlvl2)
     print "Number of extrema in third octave: %d" % np.sum(extrpyrlvl3)
     print "Number of extrema in fourth octave: %d" % np.sum(extrpyrlvl4)
-    
+
     # Gradient magnitude and orientation for each image sample point at each scale
     magpyrlvl1 = np.zeros((doubled.shape[0], doubled.shape[1], 3))
     magpyrlvl2 = np.zeros((normal.shape[0], normal.shape[1], 3))
@@ -277,38 +277,38 @@ def detect_keypoints(imagename, threshold):
     oripyrlvl2 = np.zeros((normal.shape[0], normal.shape[1], 3))
     oripyrlvl3 = np.zeros((halved.shape[0], halved.shape[1], 3))
     oripyrlvl4 = np.zeros((quartered.shape[0], quartered.shape[1], 3))
-    
+
     for i in range(0, 3):
         for j in range(1, doubled.shape[0] - 1):
             for k in range(1, doubled.shape[1] - 1):
-                magpyrlvl1[j, k, i] = ( ((doubled[j+1, k] - doubled[j-1, k]) ** 2) + ((doubled[j, k+1] - doubled[j, k-1]) ** 2) ) ** 0.5   
-                oripyrlvl1[j, k, i] = (36 / (2 * np.pi)) * (np.pi + np.arctan2((doubled[j, k+1] - doubled[j, k-1]), (doubled[j+1, k] - doubled[j-1, k])))        
-                
+                magpyrlvl1[j, k, i] = ( ((doubled[j+1, k] - doubled[j-1, k]) ** 2) + ((doubled[j, k+1] - doubled[j, k-1]) ** 2) ) ** 0.5
+                oripyrlvl1[j, k, i] = (36 / (2 * np.pi)) * (np.pi + np.arctan2((doubled[j, k+1] - doubled[j, k-1]), (doubled[j+1, k] - doubled[j-1, k])))
+
     for i in range(0, 3):
         for j in range(1, normal.shape[0] - 1):
             for k in range(1, normal.shape[1] - 1):
-                magpyrlvl2[j, k, i] = ( ((normal[j+1, k] - normal[j-1, k]) ** 2) + ((normal[j, k+1] - normal[j, k-1]) ** 2) ) ** 0.5   
-                oripyrlvl2[j, k, i] = (36 / (2 * np.pi)) * (np.pi + np.arctan2((normal[j, k+1] - normal[j, k-1]), (normal[j+1, k] - normal[j-1, k])))    
+                magpyrlvl2[j, k, i] = ( ((normal[j+1, k] - normal[j-1, k]) ** 2) + ((normal[j, k+1] - normal[j, k-1]) ** 2) ) ** 0.5
+                oripyrlvl2[j, k, i] = (36 / (2 * np.pi)) * (np.pi + np.arctan2((normal[j, k+1] - normal[j, k-1]), (normal[j+1, k] - normal[j-1, k])))
 
     for i in range(0, 3):
         for j in range(1, halved.shape[0] - 1):
             for k in range(1, halved.shape[1] - 1):
-                magpyrlvl3[j, k, i] = ( ((halved[j+1, k] - halved[j-1, k]) ** 2) + ((halved[j, k+1] - halved[j, k-1]) ** 2) ) ** 0.5   
-                oripyrlvl3[j, k, i] = (36 / (2 * np.pi)) * (np.pi + np.arctan2((halved[j, k+1] - halved[j, k-1]), (halved[j+1, k] - halved[j-1, k])))    
+                magpyrlvl3[j, k, i] = ( ((halved[j+1, k] - halved[j-1, k]) ** 2) + ((halved[j, k+1] - halved[j, k-1]) ** 2) ) ** 0.5
+                oripyrlvl3[j, k, i] = (36 / (2 * np.pi)) * (np.pi + np.arctan2((halved[j, k+1] - halved[j, k-1]), (halved[j+1, k] - halved[j-1, k])))
 
     for i in range(0, 3):
         for j in range(1, quartered.shape[0] - 1):
             for k in range(1, quartered.shape[1] - 1):
-                magpyrlvl4[j, k, i] = ( ((quartered[j+1, k] - quartered[j-1, k]) ** 2) + ((quartered[j, k+1] - quartered[j, k-1]) ** 2) ) ** 0.5   
-                oripyrlvl4[j, k, i] = (36 / (2 * np.pi)) * (np.pi + np.arctan2((quartered[j, k+1] - quartered[j, k-1]), (quartered[j+1, k] - quartered[j-1, k])))    
+                magpyrlvl4[j, k, i] = ( ((quartered[j+1, k] - quartered[j-1, k]) ** 2) + ((quartered[j, k+1] - quartered[j, k-1]) ** 2) ) ** 0.5
+                oripyrlvl4[j, k, i] = (36 / (2 * np.pi)) * (np.pi + np.arctan2((quartered[j, k+1] - quartered[j, k-1]), (quartered[j+1, k] - quartered[j-1, k])))
 
     extr_sum = np.sum(extrpyrlvl1) + np.sum(extrpyrlvl2) + np.sum(extrpyrlvl3) + np.sum(extrpyrlvl4)
-    keypoints = np.zeros((extr_sum, 4)) 
+    keypoints = np.zeros((int(extr_sum), 4))
 
     print "Calculating keypoint orientations..."
 
     count = 0
-    
+
     for i in range(0, 3):
         for j in range(80, doubled.shape[0] - 80):
             for k in range(80, doubled.shape[1] - 80):
@@ -323,8 +323,9 @@ def detect_keypoints(imagename, threshold):
                                 continue
                             weight = magpyrlvl1[j + x, k + y, i] * gaussian_window.pdf([j + x, k + y])
                             bin_idx = np.clip(np.floor(oripyrlvl1[j + x, k + y, i]), 0, 35)
-                            orient_hist[np.floor(bin_idx)] += weight  
-                    
+                            bin_idx = int(np.floor(bin_idx))
+                            orient_hist[bin_idx] += weight
+
                     maxval = np.amax(orient_hist)
                     maxidx = np.argmax(orient_hist)
                     keypoints[count, :] = np.array([int(j * 0.5), int(k * 0.5), kvectotal[i], maxidx])
@@ -336,8 +337,8 @@ def detect_keypoints(imagename, threshold):
                         np.append(keypoints, np.array([[int(j * 0.5), int(k * 0.5), kvectotal[i], newmaxidx]]), axis=0)
                         orient_hist[newmaxidx] = 0
                         newmaxval = np.amax(orient_hist)
-    
-                    
+
+
     for i in range(0, 3):
         for j in range(40, normal.shape[0] - 40):
             for k in range(40, normal.shape[1] - 40):
@@ -352,8 +353,9 @@ def detect_keypoints(imagename, threshold):
                                 continue
                             weight = magpyrlvl2[j + x, k + y, i] * gaussian_window.pdf([j + x, k + y])
                             bin_idx = np.clip(np.floor(oripyrlvl2[j + x, k + y, i]), 0, 35)
-                            orient_hist[np.floor(bin_idx)] += weight  
-                    
+                            bin_idx = int(np.floor(bin_idx))
+                            orient_hist[bin_idx] += weight
+
                     maxval = np.amax(orient_hist)
                     maxidx = np.argmax(orient_hist)
                     keypoints[count, :] = np.array([j, k, kvectotal[i + 3], maxidx])
@@ -365,7 +367,7 @@ def detect_keypoints(imagename, threshold):
                         np.append(keypoints, np.array([[j, k, kvectotal[i + 3], newmaxidx]]), axis=0)
                         orient_hist[newmaxidx] = 0
                         newmaxval = np.amax(orient_hist)
-    
+
 
     for i in range(0, 3):
         for j in range(20, halved.shape[0] - 20):
@@ -381,8 +383,9 @@ def detect_keypoints(imagename, threshold):
                                 continue
                             weight = magpyrlvl3[j + x, k + y, i] * gaussian_window.pdf([j + x, k + y])
                             bin_idx = np.clip(np.floor(oripyrlvl3[j + x, k + y, i]), 0, 35)
-                            orient_hist[np.floor(bin_idx)] += weight  
-                    
+                            bin_idx = int(np.floor(bin_idx))
+                            orient_hist[bin_idx] += weight
+
                     maxval = np.amax(orient_hist)
                     maxidx = np.argmax(orient_hist)
                     keypoints[count, :] = np.array([j * 2, k * 2, kvectotal[i + 6], maxidx])
@@ -394,7 +397,7 @@ def detect_keypoints(imagename, threshold):
                         np.append(keypoints, np.array([[j * 2, k * 2, kvectotal[i + 6], newmaxidx]]), axis=0)
                         orient_hist[newmaxidx] = 0
                         newmaxval = np.amax(orient_hist)
-    
+
 
     for i in range(0, 3):
         for j in range(10, quartered.shape[0] - 10):
@@ -410,8 +413,9 @@ def detect_keypoints(imagename, threshold):
                                 continue
                             weight = magpyrlvl4[j + x, k + y, i] * gaussian_window.pdf([j + x, k + y])
                             bin_idx = np.clip(np.floor(oripyrlvl4[j + x, k + y, i]), 0, 35)
-                            orient_hist[np.floor(bin_idx)] += weight  
-                    
+                            bin_idx = int(np.floor(bin_idx))
+                            orient_hist[bin_idx] += weight
+
                     maxval = np.amax(orient_hist)
                     maxidx = np.argmax(orient_hist)
                     keypoints[count, :] = np.array([j * 4, k * 4, kvectotal[i + 9], maxidx])
@@ -423,7 +427,7 @@ def detect_keypoints(imagename, threshold):
                         np.append(keypoints, np.array([[j * 4, k * 4, kvectotal[i + 9], newmaxidx]]), axis=0)
                         orient_hist[newmaxidx] = 0
                         newmaxval = np.amax(orient_hist)
-    
+
 
     print "Calculating descriptor..."
 
@@ -433,35 +437,35 @@ def detect_keypoints(imagename, threshold):
     for i in range(0, 3):
         magmax = np.amax(magpyrlvl1[:, :, i])
         magpyr[:, :, i] = misc.imresize(magpyrlvl1[:, :, i], (normal.shape[0], normal.shape[1]), "bilinear").astype(float)
-        magpyr[:, :, i] = (magmax / np.amax(magpyr[:, :, i])) * magpyr[:, :, i]  
-        oripyr[:, :, i] = misc.imresize(oripyrlvl1[:, :, i], (normal.shape[0], normal.shape[1]), "bilinear").astype(int)    
+        magpyr[:, :, i] = (magmax / np.amax(magpyr[:, :, i])) * magpyr[:, :, i]
+        oripyr[:, :, i] = misc.imresize(oripyrlvl1[:, :, i], (normal.shape[0], normal.shape[1]), "bilinear").astype(int)
         oripyr[:, :, i] = ((36.0 / np.amax(oripyr[:, :, i])) * oripyr[:, :, i]).astype(int)
 
     for i in range(0, 3):
         magpyr[:, :, i+3] = (magpyrlvl2[:, :, i]).astype(float)
-        oripyr[:, :, i+3] = (oripyrlvl2[:, :, i]).astype(int)             
-    
-    for i in range(0, 3):
-        magpyr[:, :, i+6] = misc.imresize(magpyrlvl3[:, :, i], (normal.shape[0], normal.shape[1]), "bilinear").astype(int)   
-        oripyr[:, :, i+6] = misc.imresize(oripyrlvl3[:, :, i], (normal.shape[0], normal.shape[1]), "bilinear").astype(int)    
+        oripyr[:, :, i+3] = (oripyrlvl2[:, :, i]).astype(int)
 
     for i in range(0, 3):
-        magpyr[:, :, i+9] = misc.imresize(magpyrlvl4[:, :, i], (normal.shape[0], normal.shape[1]), "bilinear").astype(int)   
-        oripyr[:, :, i+9] = misc.imresize(oripyrlvl4[:, :, i], (normal.shape[0], normal.shape[1]), "bilinear").astype(int)    
-        
+        magpyr[:, :, i+6] = misc.imresize(magpyrlvl3[:, :, i], (normal.shape[0], normal.shape[1]), "bilinear").astype(int)
+        oripyr[:, :, i+6] = misc.imresize(oripyrlvl3[:, :, i], (normal.shape[0], normal.shape[1]), "bilinear").astype(int)
+
+    for i in range(0, 3):
+        magpyr[:, :, i+9] = misc.imresize(magpyrlvl4[:, :, i], (normal.shape[0], normal.shape[1]), "bilinear").astype(int)
+        oripyr[:, :, i+9] = misc.imresize(oripyrlvl4[:, :, i], (normal.shape[0], normal.shape[1]), "bilinear").astype(int)
+
 
     descriptors = np.zeros([keypoints.shape[0], 128])
 
-    for i in range(0, keypoints.shape[0]): 
+    for i in range(0, keypoints.shape[0]):
         for x in range(-8, 8):
             for y in range(-8, 8):
                 theta = 10 * keypoints[i,3] * np.pi / 180.0
-                xrot = np.round((np.cos(theta) * x) - (np.sin(theta) * y))
-                yrot = np.round((np.sin(theta) * x) + (np.cos(theta) * y))
-                scale_idx = np.argwhere(kvectotal == keypoints[i,2])[0][0]
-                x0 = keypoints[i,0]
-                y0 = keypoints[i,1]
-                gaussian_window = multivariate_normal(mean=[x0,y0], cov=8) 
+                xrot = int(np.round((np.cos(theta) * x) - (np.sin(theta) * y)))
+                yrot = int(np.round((np.sin(theta) * x) + (np.cos(theta) * y)))
+                scale_idx = int(np.argwhere(kvectotal == keypoints[i,2])[0][0])
+                x0 = int(keypoints[i,0])
+                y0 = int(keypoints[i,1])
+                gaussian_window = multivariate_normal(mean=[x0,y0], cov=8)
                 weight = magpyr[x0 + xrot, y0 + yrot, scale_idx] * gaussian_window.pdf([x0 + xrot, y0 + yrot])
                 angle = oripyr[x0 + xrot, y0 + yrot, scale_idx] - keypoints[i,3]
                 if angle < 0:
@@ -469,15 +473,10 @@ def detect_keypoints(imagename, threshold):
 
                 bin_idx = np.clip(np.floor((8.0 / 36) * angle), 0, 7).astype(int)
                 descriptors[i, 32 * int((x + 8)/4) + 8 * int((y + 8)/4) + bin_idx] += weight
-        
-        descriptors[i, :] = descriptors[i, :] / norm(descriptors[i, :]) 
+
+        descriptors[i, :] = descriptors[i, :] / norm(descriptors[i, :])
         descriptors[i, :] = np.clip(descriptors[i, :], 0, 0.2)
         descriptors[i, :] = descriptors[i, :] / norm(descriptors[i, :])
-                
- 
+
+
     return [keypoints, descriptors]
-
-
-
-
-
