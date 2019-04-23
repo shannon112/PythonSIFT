@@ -112,7 +112,7 @@ def detect_keypoints(imagename, threshold):
 
 		    dD = np.matrix([[dx], [dy], [ds]])
 		    H = np.matrix([[dxx, dxy, dxs], [dxy, dyy, dys], [dxs, dys, dss]])
-		    x_hat = numpy.linalg.lstsq(H, dD)[0]
+		    x_hat = numpy.linalg.lstsq(H, dD,rcond=None)[0]
 		    D_x_hat = diffpyrlvl1[j, k, i] + 0.5 * np.dot(dD.transpose(), x_hat)
 
 		    r = 10.0
@@ -159,7 +159,7 @@ def detect_keypoints(imagename, threshold):
 
 		    dD = np.matrix([[dx], [dy], [ds]])
 		    H = np.matrix([[dxx, dxy, dxs], [dxy, dyy, dys], [dxs, dys, dss]])
-		    x_hat = numpy.linalg.lstsq(H, dD)[0]
+		    x_hat = numpy.linalg.lstsq(H, dD,rcond=None)[0]
 		    D_x_hat = diffpyrlvl2[j, k, i] + 0.5 * np.dot(dD.transpose(), x_hat)
 
 		    r = 10.0
@@ -206,7 +206,7 @@ def detect_keypoints(imagename, threshold):
 
 		    dD = np.matrix([[dx], [dy], [ds]])
 		    H = np.matrix([[dxx, dxy, dxs], [dxy, dyy, dys], [dxs, dys, dss]])
-		    x_hat = numpy.linalg.lstsq(H, dD)[0]
+		    x_hat = numpy.linalg.lstsq(H, dD,rcond=None)[0]
 		    D_x_hat = diffpyrlvl3[j, k, i] + 0.5 * np.dot(dD.transpose(), x_hat)
 
 		    r = 10.0
@@ -254,7 +254,7 @@ def detect_keypoints(imagename, threshold):
 
 		    dD = np.matrix([[dx], [dy], [ds]])
 		    H = np.matrix([[dxx, dxy, dxs], [dxy, dyy, dys], [dxs, dys, dss]])
-		    x_hat = numpy.linalg.lstsq(H, dD)[0]
+		    x_hat = numpy.linalg.lstsq(H, dD,rcond=None)[0]
 		    D_x_hat = diffpyrlvl4[j, k, i] + 0.5 * np.dot(dD.transpose(), x_hat)
 
 		    r = 10.0

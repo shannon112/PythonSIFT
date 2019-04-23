@@ -4,7 +4,7 @@ import cv2
 import itertools
 
 def match_template(imagename, templatename, threshold, cutoff):
-	
+
     img = cv2.imread(imagename)
     template = cv2.imread(templatename)
 
