@@ -2,7 +2,17 @@
 
 This is an implementation of SIFT done entirely in Python with the help of NumPy. A wrapper function, ```match_template()```, matches a template to an image and displays the result as a demonstration of the SIFT algorithm. 
 
-Note: this code relies on OpenCV version 2.4.11.
+Note: this code run under 
+```
+Python 2.7.15
+opencv-python==3.4.2.16
+numpy==1.16.2
+```
+
+Run the quickly demo
+```
+python main.py
+```
 
 # Match a template to an image
 The wrapper function ```match_template()``` is used to call ```detect_keypoints()```.
