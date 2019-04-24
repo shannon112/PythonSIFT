@@ -2,6 +2,7 @@ from siftdetector import detect_keypoints
 import numpy as np
 import cv2
 import itertools
+import math
 
 def match_template(imagename, templatename, threshold, cutoff):
 
@@ -26,6 +27,7 @@ def match_template(imagename, templatename, threshold, cutoff):
 
     kpi_cut = []
     for i, dis in itertools.izip(idx, dist):
+        print dis
     	if dis < cutoff:
     		kpi_cut.append(kpi[i])
     	else:
@@ -33,6 +35,7 @@ def match_template(imagename, templatename, threshold, cutoff):
 
     kpt_cut = []
     for i, dis in itertools.izip(indices, dist):
+        print dis
     	if dis < cutoff:
     		kpt_cut.append(kpt[i])
     	else:
@@ -48,8 +51,11 @@ def match_template(imagename, templatename, threshold, cutoff):
     newimg[:h1, w2:w1+w2] = img
 
     for i in range(min(len(kpi), len(kpt))):
-    	pt_a = (int(kpt[i,1]), int(kpt[i,0] + hdif))
-    	pt_b = (int(kpi[i,1] + w2), int(kpi[i,0]))
-    	cv2.line(newimg, pt_a, pt_b, (255, 0, 0))
-
+        distance = math.sqrt(( kpt[i,1] - kpi[i,1] )**2 + (kpt[i,0] - kpi[i,0])**2 )
+        if distance > 0:
+            pt_a = (int(kpt[i,1]), int(kpt[i,0] + hdif))
+            pt_b = (int(kpi[i,1] + w2), int(kpi[i,0]))
+            #cv2.line(newimg, pt_a, pt_b, (255, 0, 0))
+            cv2.circle(newimg, pt_a, 1, (0,255,255), -1)
+            cv2.circle(newimg, pt_b, 1, (0,255,255), -1)
     cv2.imwrite('matches.jpg', newimg)
