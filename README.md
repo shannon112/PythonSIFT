@@ -14,7 +14,7 @@ Run the quickly demo
 ```
 python main.py
 ```
-<img src="https://github.com/shannon112/PythonSIFT/blob/master/prtn00.jpg" width="200"> <img src="https://github.com/shannon112/PythonSIFT/blob/master/prtn01.jpg" width="200"> <img src="https://github.com/shannon112/PythonSIFT/blob/master/matches.jpg" width="400">
+<img src="https://github.com/shannon112/PythonSIFT/blob/master/0.jpg" width="200"> <img src="https://github.com/shannon112/PythonSIFT/blob/master/1.jpg" width="200"> <img src="https://github.com/shannon112/PythonSIFT/blob/master/matches.jpg" width="400">
 
 # Match a template to an image
 The wrapper function ```match_template()``` is used to call ```detect_keypoints()```.
