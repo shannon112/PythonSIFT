@@ -5,16 +5,28 @@ from scipy import ndimage
 from scipy.stats import multivariate_normal
 from numpy.linalg import norm
 import numpy.linalg
+import sys
+import constant as const
+import cv2
 
 # INPUTS: imagename (filename of image, string)
 #         threshold (constrast threshold, int or float)
 # OUTPUT: keypoints (an array of four column, where the first is the x location, the second is the y location, the third is the scale, and the fourth is the orientation)
 #         descriptors (an array of 128 columns, which correspond to the SIFT descriptor)
+"""
+End to end alignment
 
-def detect_keypoints(imagename, threshold):
+Args:
+    img: panoramas image array
+    shifts: all shifts for each image in panoramas
+
+Returns:
+    Aligned image array
+"""
+def sift_detector(imagename):
     # SIFT Detector
     #--------------
-
+    threshold = const.SIFT_THRESHOLD
     original = ndimage.imread(imagename, flatten=True)
 
     # SIFT Parameters
@@ -41,7 +53,7 @@ def detect_keypoints(imagename, threshold):
     pyrlvl3 = np.zeros((halved.shape[0], halved.shape[1], 6))
     pyrlvl4 = np.zeros((quartered.shape[0], quartered.shape[1], 6))
 
-    print "Constructing pyramids..."
+    sys.stdout.write(" | | Constructing pyramids...\n");sys.stdout.flush()
 
     # Construct Gaussian pyramids
     for i in range(0, 6):
@@ -69,8 +81,8 @@ def detect_keypoints(imagename, threshold):
     extrpyrlvl3 = np.zeros((halved.shape[0], halved.shape[1], 3))
     extrpyrlvl4 = np.zeros((quartered.shape[0], quartered.shape[1], 3))
 
-    print "Starting extrema detection..."
-    print "First octave"
+    sys.stdout.write(" | | Starting extrema detection...\n"); sys.stdout.flush()
+    sys.stdout.write(" | | First octave...  ");sys.stdout.flush()
 
     # In each of the following for loops, elements of each pyramids that are larger or smaller than its 26 immediate neighbors in space and scale are labeled as extrema. As explained in section 4 of Lowe's paper, these initial extrema are pruned by checking that their contrast and curvature are above certain thresholds. The thresholds used here are those suggested by Lowe.
 
@@ -119,7 +131,8 @@ def detect_keypoints(imagename, threshold):
 		    if ((((dxx + dyy) ** 2) * r) < (dxx * dyy - (dxy ** 2)) * (((r + 1) ** 2))) and (np.absolute(x_hat[0]) < 0.5) and (np.absolute(x_hat[1]) < 0.5) and (np.absolute(x_hat[2]) < 0.5) and (np.absolute(D_x_hat) > 0.03):
 			extrpyrlvl1[j, k, i - 1] = 1
 
-    print "Second octave"
+    print "num of extrema : %d" % np.sum(extrpyrlvl1)
+    sys.stdout.write(" | | Second octave...  "); sys.stdout.flush()
 
     for i in range(1, 4):
 	for j in range(40, normal.shape[0] - 40):
@@ -166,7 +179,8 @@ def detect_keypoints(imagename, threshold):
 		    if (((dxx + dyy) ** 2) * r) < (dxx * dyy - (dxy ** 2)) * (((r + 1) ** 2)) and np.absolute(x_hat[0]) < 0.5 and np.absolute(x_hat[1]) < 0.5 and np.absolute(x_hat[2]) < 0.5 and np.absolute(D_x_hat) > 0.03:
 			extrpyrlvl2[j, k, i - 1] = 1
 
-    print "Third octave"
+    print "num of extrema : %d" % np.sum(extrpyrlvl2)
+    sys.stdout.write(" | | Third octave...  ");sys.stdout.flush()
 
     for i in range(1, 4):
 	for j in range(20, halved.shape[0] - 20):
@@ -213,8 +227,8 @@ def detect_keypoints(imagename, threshold):
 		    if (((dxx + dyy) ** 2) * r) < (dxx * dyy - (dxy ** 2)) * (((r + 1) ** 2)) and np.absolute(x_hat[0]) < 0.5 and np.absolute(x_hat[1]) < 0.5 and np.absolute(x_hat[2]) < 0.5 and np.absolute(D_x_hat) > 0.03:
 			extrpyrlvl3[j, k, i - 1] = 1
 
-
-    print "Fourth octave"
+    print "num of extrema : %d" % np.sum(extrpyrlvl3)
+    sys.stdout.write(" | | Fourth octave...  ");sys.stdout.flush()
 
     for i in range(1, 4):
 	for j in range(10, quartered.shape[0] - 10):
@@ -260,12 +274,7 @@ def detect_keypoints(imagename, threshold):
 		    r = 10.0
 		    if (((dxx + dyy) ** 2) * r) < (dxx * dyy - (dxy ** 2)) * (((r + 1) ** 2)) and np.absolute(x_hat[0]) < 0.5 and np.absolute(x_hat[1]) < 0.5 and np.absolute(x_hat[2]) < 0.5 and np.absolute(D_x_hat) > 0.03:
 			extrpyrlvl4[j, k, i - 1] = 1
-
-
-    print "Number of extrema in first octave: %d" % np.sum(extrpyrlvl1)
-    print "Number of extrema in second octave: %d" % np.sum(extrpyrlvl2)
-    print "Number of extrema in third octave: %d" % np.sum(extrpyrlvl3)
-    print "Number of extrema in fourth octave: %d" % np.sum(extrpyrlvl4)
+    print "num of extrema : %d" % np.sum(extrpyrlvl4)
 
     # Gradient magnitude and orientation for each image sample point at each scale
     magpyrlvl1 = np.zeros((doubled.shape[0], doubled.shape[1], 3))
@@ -305,7 +314,7 @@ def detect_keypoints(imagename, threshold):
     extr_sum = np.sum(extrpyrlvl1) + np.sum(extrpyrlvl2) + np.sum(extrpyrlvl3) + np.sum(extrpyrlvl4)
     keypoints = np.zeros((int(extr_sum), 4))
 
-    print "Calculating keypoint orientations..."
+    sys.stdout.write(" | | Calculating keypoint orientations...\n");sys.stdout.flush()
 
     count = 0
 
@@ -429,7 +438,7 @@ def detect_keypoints(imagename, threshold):
                         newmaxval = np.amax(orient_hist)
 
 
-    print "Calculating descriptor..."
+    sys.stdout.write(" | | Calculating descriptor...\n");sys.stdout.flush()
 
     magpyr = np.zeros((normal.shape[0], normal.shape[1], 12))
     oripyr = np.zeros((normal.shape[0], normal.shape[1], 12))
@@ -478,5 +487,10 @@ def detect_keypoints(imagename, threshold):
         descriptors[i, :] = np.clip(descriptors[i, :], 0, 0.2)
         descriptors[i, :] = descriptors[i, :] / norm(descriptors[i, :])
 
+    newimg = cv2.imread(imagename).copy()
+    for kp in keypoints:
+        pt_a = (int(kp[1]), int(kp[0]))
+        cv2.circle(newimg, pt_a, 3, (147,20,255), -1)
+    cv2.imwrite(imagename[:-4]+'_features.jpg', newimg)
 
     return [keypoints, descriptors]
