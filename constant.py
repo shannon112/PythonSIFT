@@ -3,7 +3,7 @@ All constants in this project
 Could be adjusted to get a better performance
 """
 # siftdetector.py sift threshold
-SIFT_THRESHOLD        = 15
+SIFT_THRESHOLD        = 10
 
 # siftmatch.py sift feature matching cutoff
 SIFT_MATCH_CUTOFF     =  0.5 #BF   #0.0003 #flann

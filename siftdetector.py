@@ -77,7 +77,6 @@ def sift_detector(imagename):
     extrpyrlvl4 = np.zeros((quartered.shape[0], quartered.shape[1], 3))
 
     sys.stdout.write(" | | Starting extrema detection...\n"); sys.stdout.flush()
-    sys.stdout.write(" | | First octave...  ");sys.stdout.flush()
 
     # In each of the following for loops, elements of each pyramids that are larger or smaller than
     # its 26 immediate neighbors in space and scale are labeled as extrema. As explained in section 4
@@ -86,193 +85,54 @@ def sift_detector(imagename):
 
     iter_params = [80,40,20,10]
     diffpyrlvls = [diffpyrlvl1,diffpyrlvl2,diffpyrlvl3,diffpyrlvl4]
+    extrpyrlvls = [extrpyrlvl1,extrpyrlvl2,extrpyrlvl3,extrpyrlvl4]
+    shapes = [doubled.shape, normal.shape, halved.shape, quartered.shape]
 
-    for i in range(1, 4):
-        for j in range(80, doubled.shape[0] - 80):
-            for k in range(80, doubled.shape[1] - 80):
-                if np.absolute(diffpyrlvl1[j, k, i]) < threshold:
-                    continue
-                maxbool = (diffpyrlvl1[j, k, i] > 0)
-                minbool = (diffpyrlvl1[j, k, i] < 0)
+    for z,diffpyrlvl in enumerate(diffpyrlvls):
+        sys.stdout.write(" | | "+str(z)+" octave...  ");sys.stdout.flush()
+        for i in range(1, 4):
+            for j in range(iter_params[z], shapes[z][0] - iter_params[z]):
+                for k in range(iter_params[z], shapes[z][1] - iter_params[z]):
+                    temp = diffpyrlvl[j, k, i]
+                    if np.absolute(temp) < threshold:
+                        continue
+                    maxbool = (diffpyrlvl[j, k, i] > 0)
+                    minbool = (diffpyrlvl[j, k, i] < 0)
 
-                for di in range(-1, 2):
-                    for dj in range(-1, 2):
-                        for dk in range(-1, 2):
-                            if di == 0 and dj == 0 and dk == 0:
-                                continue
-                            maxbool = maxbool and (diffpyrlvl1[j, k, i] > diffpyrlvl1[j + dj, k + dk, i + di])
-                            minbool = minbool and (diffpyrlvl1[j, k, i] < diffpyrlvl1[j + dj, k + dk, i + di])
+                    for di in range(-1, 2):
+                        for dj in range(-1, 2):
+                            for dk in range(-1, 2):
+                                if di == 0 and dj == 0 and dk == 0:
+                                    continue
+                                maxbool = maxbool and (diffpyrlvl[j, k, i] > diffpyrlvl[j + dj, k + dk, i + di])
+                                minbool = minbool and (diffpyrlvl[j, k, i] < diffpyrlvl[j + dj, k + dk, i + di])
+                                if not maxbool and not minbool:
+                                    break
                             if not maxbool and not minbool:
                                 break
                         if not maxbool and not minbool:
                             break
-                    if not maxbool and not minbool:
-                        break
 
-                if maxbool or minbool:
-                    dx = (diffpyrlvl1[j, k+1, i] - diffpyrlvl1[j, k-1, i]) * 0.5 / 255
-                    dy = (diffpyrlvl1[j+1, k, i] - diffpyrlvl1[j-1, k, i]) * 0.5 / 255
-                    ds = (diffpyrlvl1[j, k, i+1] - diffpyrlvl1[j, k, i-1]) * 0.5 / 255
-                    dxx = (diffpyrlvl1[j, k+1, i] + diffpyrlvl1[j, k-1, i] - 2 * diffpyrlvl1[j, k, i]) * 1.0 / 255
-                    dyy = (diffpyrlvl1[j+1, k, i] + diffpyrlvl1[j-1, k, i] - 2 * diffpyrlvl1[j, k, i]) * 1.0 / 255
-                    dss = (diffpyrlvl1[j, k, i+1] + diffpyrlvl1[j, k, i-1] - 2 * diffpyrlvl1[j, k, i]) * 1.0 / 255
-                    dxy = (diffpyrlvl1[j+1, k+1, i] - diffpyrlvl1[j+1, k-1, i] - diffpyrlvl1[j-1, k+1, i] + diffpyrlvl1[j-1, k-1, i]) * 0.25 / 255
-                    dxs = (diffpyrlvl1[j, k+1, i+1] - diffpyrlvl1[j, k-1, i+1] - diffpyrlvl1[j, k+1, i-1] + diffpyrlvl1[j, k-1, i-1]) * 0.25 / 255
-                    dys = (diffpyrlvl1[j+1, k, i+1] - diffpyrlvl1[j-1, k, i+1] - diffpyrlvl1[j+1, k, i-1] + diffpyrlvl1[j-1, k, i-1]) * 0.25 / 255
+                    if maxbool or minbool:
+                        dx = (diffpyrlvl[j, k+1, i] - diffpyrlvl[j, k-1, i]) * 0.5 / 255
+                        dy = (diffpyrlvl[j+1, k, i] - diffpyrlvl[j-1, k, i]) * 0.5 / 255
+                        ds = (diffpyrlvl[j, k, i+1] - diffpyrlvl[j, k, i-1]) * 0.5 / 255
+                        dxx = (diffpyrlvl[j, k+1, i] + diffpyrlvl[j, k-1, i] - 2 * diffpyrlvl[j, k, i]) * 1.0 / 255
+                        dyy = (diffpyrlvl[j+1, k, i] + diffpyrlvl[j-1, k, i] - 2 * diffpyrlvl[j, k, i]) * 1.0 / 255
+                        dss = (diffpyrlvl[j, k, i+1] + diffpyrlvl[j, k, i-1] - 2 * diffpyrlvl[j, k, i]) * 1.0 / 255
+                        dxy = (diffpyrlvl[j+1, k+1, i] - diffpyrlvl[j+1, k-1, i] - diffpyrlvl[j-1, k+1, i] + diffpyrlvl[j-1, k-1, i]) * 0.25 / 255
+                        dxs = (diffpyrlvl[j, k+1, i+1] - diffpyrlvl[j, k-1, i+1] - diffpyrlvl[j, k+1, i-1] + diffpyrlvl[j, k-1, i-1]) * 0.25 / 255
+                        dys = (diffpyrlvl[j+1, k, i+1] - diffpyrlvl[j-1, k, i+1] - diffpyrlvl[j+1, k, i-1] + diffpyrlvl[j-1, k, i-1]) * 0.25 / 255
 
-                    dD = np.matrix([[dx], [dy], [ds]])
-                    H = np.matrix([[dxx, dxy, dxs], [dxy, dyy, dys], [dxs, dys, dss]])
-                    x_hat = numpy.linalg.lstsq(H, dD,rcond=None)[0]
-                    D_x_hat = diffpyrlvl1[j, k, i] + 0.5 * np.dot(dD.transpose(), x_hat)
+                        dD = np.matrix([[dx], [dy], [ds]])
+                        H = np.matrix([[dxx, dxy, dxs], [dxy, dyy, dys], [dxs, dys, dss]])
+                        x_hat = numpy.linalg.lstsq(H, dD,rcond=None)[0]
+                        D_x_hat = diffpyrlvl[j, k, i] + 0.5 * np.dot(dD.transpose(), x_hat)
 
-                    r = 10.0
-                    if ((((dxx + dyy) ** 2) * r) < (dxx * dyy - (dxy ** 2)) * (((r + 1) ** 2))) and (np.absolute(x_hat[0]) < 0.5) and (np.absolute(x_hat[1]) < 0.5) and (np.absolute(x_hat[2]) < 0.5) and (np.absolute(D_x_hat) > 0.03):
-                        extrpyrlvl1[j, k, i - 1] = 1
-
-    print "num of extrema : %d" % np.sum(extrpyrlvl1)
-    sys.stdout.write(" | | Second octave...  "); sys.stdout.flush()
-
-    for i in range(1, 4):
-	for j in range(40, normal.shape[0] - 40):
-	    for k in range(40, normal.shape[1] - 40):
-		if np.absolute(diffpyrlvl2[j, k, i]) < threshold:
-		    continue
-
-		maxbool = (diffpyrlvl2[j, k, i] > 0)
-		minbool = (diffpyrlvl2[j, k, i] < 0)
-
-		for di in range(-1, 2):
-		    for dj in range(-1, 2):
-			for dk in range(-1, 2):
-			    if di == 0 and dj == 0 and dk == 0:
-				continue
-			    maxbool = maxbool and (diffpyrlvl2[j, k, i] > diffpyrlvl2[j + dj, k + dk, i + di])
-			    minbool = minbool and (diffpyrlvl2[j, k, i] < diffpyrlvl2[j + dj, k + dk, i + di])
-			    if not maxbool and not minbool:
-				break
-
-			if not maxbool and not minbool:
-			    break
-
-		    if not maxbool and not minbool:
-			break
-
-		if maxbool or minbool:
-		    dx = (diffpyrlvl2[j, k+1, i] - diffpyrlvl2[j, k-1, i]) * 0.5 / 255
-		    dy = (diffpyrlvl2[j+1, k, i] - diffpyrlvl2[j-1, k, i]) * 0.5 / 255
-		    ds = (diffpyrlvl2[j, k, i+1] - diffpyrlvl2[j, k, i-1]) * 0.5 / 255
-		    dxx = (diffpyrlvl2[j, k+1, i] + diffpyrlvl2[j, k-1, i] - 2 * diffpyrlvl2[j, k, i]) * 1.0 / 255
-		    dyy = (diffpyrlvl2[j+1, k, i] + diffpyrlvl2[j-1, k, i] - 2 * diffpyrlvl2[j, k, i]) * 1.0 / 255
-		    dss = (diffpyrlvl2[j, k, i+1] + diffpyrlvl2[j, k, i-1] - 2 * diffpyrlvl2[j, k, i]) * 1.0 / 255
-		    dxy = (diffpyrlvl2[j+1, k+1, i] - diffpyrlvl2[j+1, k-1, i] - diffpyrlvl2[j-1, k+1, i] + diffpyrlvl2[j-1, k-1, i]) * 0.25 / 255
-		    dxs = (diffpyrlvl2[j, k+1, i+1] - diffpyrlvl2[j, k-1, i+1] - diffpyrlvl2[j, k+1, i-1] + diffpyrlvl2[j, k-1, i-1]) * 0.25 / 255
-		    dys = (diffpyrlvl2[j+1, k, i+1] - diffpyrlvl2[j-1, k, i+1] - diffpyrlvl2[j+1, k, i-1] + diffpyrlvl2[j-1, k, i-1]) * 0.25 / 255
-
-		    dD = np.matrix([[dx], [dy], [ds]])
-		    H = np.matrix([[dxx, dxy, dxs], [dxy, dyy, dys], [dxs, dys, dss]])
-		    x_hat = numpy.linalg.lstsq(H, dD,rcond=None)[0]
-		    D_x_hat = diffpyrlvl2[j, k, i] + 0.5 * np.dot(dD.transpose(), x_hat)
-
-		    r = 10.0
-		    if (((dxx + dyy) ** 2) * r) < (dxx * dyy - (dxy ** 2)) * (((r + 1) ** 2)) and np.absolute(x_hat[0]) < 0.5 and np.absolute(x_hat[1]) < 0.5 and np.absolute(x_hat[2]) < 0.5 and np.absolute(D_x_hat) > 0.03:
-			extrpyrlvl2[j, k, i - 1] = 1
-
-    print "num of extrema : %d" % np.sum(extrpyrlvl2)
-    sys.stdout.write(" | | Third octave...  ");sys.stdout.flush()
-
-    for i in range(1, 4):
-	for j in range(20, halved.shape[0] - 20):
-	    for k in range(20, halved.shape[1] - 20):
-		if np.absolute(diffpyrlvl3[j, k, i]) < threshold:
-		    continue
-
-		maxbool = (diffpyrlvl3[j, k, i] > 0)
-		minbool = (diffpyrlvl3[j, k, i] < 0)
-
-		for di in range(-1, 2):
-		    for dj in range(-1, 2):
-			for dk in range(-1, 2):
-			    if di == 0 and dj == 0 and dk == 0:
-				continue
-			    maxbool = maxbool and (diffpyrlvl3[j, k, i] > diffpyrlvl3[j + dj, k + dk, i + di])
-			    minbool = minbool and (diffpyrlvl3[j, k, i] < diffpyrlvl3[j + dj, k + dk, i + di])
-			    if not maxbool and not minbool:
-				break
-
-			if not maxbool and not minbool:
-			    break
-
-		    if not maxbool and not minbool:
-			break
-
-		if maxbool or minbool:
-		    dx = (diffpyrlvl3[j, k+1, i] - diffpyrlvl3[j, k-1, i]) * 0.5 / 255
-		    dy = (diffpyrlvl3[j+1, k, i] - diffpyrlvl3[j-1, k, i]) * 0.5 / 255
-		    ds = (diffpyrlvl3[j, k, i+1] - diffpyrlvl3[j, k, i-1]) * 0.5 / 255
-		    dxx = (diffpyrlvl3[j, k+1, i] + diffpyrlvl3[j, k-1, i] - 2 * diffpyrlvl3[j, k, i]) * 1.0 / 255
-		    dyy = (diffpyrlvl3[j+1, k, i] + diffpyrlvl3[j-1, k, i] - 2 * diffpyrlvl3[j, k, i]) * 1.0 / 255
-		    dss = (diffpyrlvl3[j, k, i+1] + diffpyrlvl3[j, k, i-1] - 2 * diffpyrlvl3[j, k, i]) * 1.0 / 255
-		    dxy = (diffpyrlvl3[j+1, k+1, i] - diffpyrlvl3[j+1, k-1, i] - diffpyrlvl3[j-1, k+1, i] + diffpyrlvl3[j-1, k-1, i]) * 0.25 / 255
-		    dxs = (diffpyrlvl3[j, k+1, i+1] - diffpyrlvl3[j, k-1, i+1] - diffpyrlvl3[j, k+1, i-1] + diffpyrlvl3[j, k-1, i-1]) * 0.25 / 255
-		    dys = (diffpyrlvl3[j+1, k, i+1] - diffpyrlvl3[j-1, k, i+1] - diffpyrlvl3[j+1, k, i-1] + diffpyrlvl3[j-1, k, i-1]) * 0.25 / 255
-
-		    dD = np.matrix([[dx], [dy], [ds]])
-		    H = np.matrix([[dxx, dxy, dxs], [dxy, dyy, dys], [dxs, dys, dss]])
-		    x_hat = numpy.linalg.lstsq(H, dD,rcond=None)[0]
-		    D_x_hat = diffpyrlvl3[j, k, i] + 0.5 * np.dot(dD.transpose(), x_hat)
-
-		    r = 10.0
-		    if (((dxx + dyy) ** 2) * r) < (dxx * dyy - (dxy ** 2)) * (((r + 1) ** 2)) and np.absolute(x_hat[0]) < 0.5 and np.absolute(x_hat[1]) < 0.5 and np.absolute(x_hat[2]) < 0.5 and np.absolute(D_x_hat) > 0.03:
-			extrpyrlvl3[j, k, i - 1] = 1
-
-    print "num of extrema : %d" % np.sum(extrpyrlvl3)
-    sys.stdout.write(" | | Fourth octave...  ");sys.stdout.flush()
-
-    for i in range(1, 4):
-	for j in range(10, quartered.shape[0] - 10):
-	    for k in range(10, quartered.shape[1] - 10):
-		if np.absolute(diffpyrlvl4[j, k, i]) < threshold:
-		    continue
-
-		maxbool = (diffpyrlvl4[j, k, i] > 0)
-		minbool = (diffpyrlvl4[j, k, i] < 0)
-
-		for di in range(-1, 2):
-		    for dj in range(-1, 2):
-			for dk in range(-1, 2):
-			    if di == 0 and dj == 0 and dk == 0:
-				continue
-			    maxbool = maxbool and (diffpyrlvl4[j, k, i] > diffpyrlvl4[j + dj, k + dk, i + di])
-			    minbool = minbool and (diffpyrlvl4[j, k, i] < diffpyrlvl4[j + dj, k + dk, i + di])
-			    if not maxbool and not minbool:
-				break
-
-			if not maxbool and not minbool:
-			    break
-
-		    if not maxbool and not minbool:
-			break
-
-		if maxbool or minbool:
-		    dx = (diffpyrlvl4[j, k+1, i] - diffpyrlvl4[j, k-1, i]) * 0.5 / 255
-		    dy = (diffpyrlvl4[j+1, k, i] - diffpyrlvl4[j-1, k, i]) * 0.5 / 255
-		    ds = (diffpyrlvl4[j, k, i+1] - diffpyrlvl4[j, k, i-1]) * 0.5 / 255
-		    dxx = (diffpyrlvl4[j, k+1, i] + diffpyrlvl4[j, k-1, i] - 2 * diffpyrlvl4[j, k, i]) * 1.0 / 255
-		    dyy = (diffpyrlvl4[j+1, k, i] + diffpyrlvl4[j-1, k, i] - 2 * diffpyrlvl4[j, k, i]) * 1.0 / 255
-		    dss = (diffpyrlvl4[j, k, i+1] + diffpyrlvl4[j, k, i-1] - 2 * diffpyrlvl4[j, k, i]) * 1.0 / 255
-		    dxy = (diffpyrlvl4[j+1, k+1, i] - diffpyrlvl4[j+1, k-1, i] - diffpyrlvl4[j-1, k+1, i] + diffpyrlvl4[j-1, k-1, i]) * 0.25 / 255
-		    dxs = (diffpyrlvl4[j, k+1, i+1] - diffpyrlvl4[j, k-1, i+1] - diffpyrlvl4[j, k+1, i-1] + diffpyrlvl4[j, k-1, i-1]) * 0.25 / 255
-		    dys = (diffpyrlvl4[j+1, k, i+1] - diffpyrlvl4[j-1, k, i+1] - diffpyrlvl4[j+1, k, i-1] + diffpyrlvl4[j-1, k, i-1]) * 0.25 / 255
-
-		    dD = np.matrix([[dx], [dy], [ds]])
-		    H = np.matrix([[dxx, dxy, dxs], [dxy, dyy, dys], [dxs, dys, dss]])
-		    x_hat = numpy.linalg.lstsq(H, dD,rcond=None)[0]
-		    D_x_hat = diffpyrlvl4[j, k, i] + 0.5 * np.dot(dD.transpose(), x_hat)
-
-		    r = 10.0
-		    if (((dxx + dyy) ** 2) * r) < (dxx * dyy - (dxy ** 2)) * (((r + 1) ** 2)) and np.absolute(x_hat[0]) < 0.5 and np.absolute(x_hat[1]) < 0.5 and np.absolute(x_hat[2]) < 0.5 and np.absolute(D_x_hat) > 0.03:
-			extrpyrlvl4[j, k, i - 1] = 1
-    print "num of extrema : %d" % np.sum(extrpyrlvl4)
+                        r = 10.0
+                        if ((((dxx + dyy) ** 2) * r) < (dxx * dyy - (dxy ** 2)) * (((r + 1) ** 2))) and (np.absolute(x_hat[0]) < 0.5) and (np.absolute(x_hat[1]) < 0.5) and (np.absolute(x_hat[2]) < 0.5) and (np.absolute(D_x_hat) > 0.03):
+                            extrpyrlvls[z][j, k, i - 1] = 1
+        print "num of extrema : %d" % np.sum(extrpyrlvls[z])
 
     # Gradient magnitude and orientation for each image sample point at each scale
     magpyrlvl1 = np.zeros((doubled.shape[0], doubled.shape[1], 3))
