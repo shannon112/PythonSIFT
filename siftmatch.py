@@ -65,13 +65,13 @@ def sift_matching_BT(templatename, imagename, kpt,dt,kpi,di):
     for matched_pair in matched_pairs:
         distance_x = matched_pair[0][1] - matched_pair[1][1]
         distance_y = abs(matched_pair[0][0] - matched_pair[1][0])
-        #if distance_y<matched_y_abs_thres and distance_x < matched_x_max_thres and distance_x > matched_x_min_thres:
-        pt_a = (int(matched_pair[0][1]), int(matched_pair[0][0] + hdif))
-        pt_b = ((int(matched_pair[1][1]) + w2), int(matched_pair[1][0]))
-        cv2.line(newimg, pt_a, pt_b, (255, 0, 0))
-        cv2.circle(newimg, pt_a, 3, (147,20,255), -1)
-        cv2.circle(newimg, pt_b, 3, (147,20,255), -1)
-        sum += 1
+        if distance_y<matched_y_abs_thres and distance_x < matched_x_max_thres and distance_x > matched_x_min_thres:
+            pt_a = (int(matched_pair[0][1]), int(matched_pair[0][0] + hdif))
+            pt_b = ((int(matched_pair[1][1]) + w2), int(matched_pair[1][0]))
+            cv2.line(newimg, pt_a, pt_b, (255, 0, 0))
+            cv2.circle(newimg, pt_a, 3, (147,20,255), -1)
+            cv2.circle(newimg, pt_b, 3, (147,20,255), -1)
+            sum += 1
     cv2.imwrite('matches.jpg', newimg)
     return sum
 
@@ -144,12 +144,12 @@ def sift_matching(templatename, imagename, kpt,dt,kpi,di):
     for i in range(np.array(kpi_cut).shape[0]):
         distance_x = kpt_cut[i][1] - kpi_cut[i][1]
         distance_y = abs(kpt_cut[i][0] - kpi_cut[i][0])
-        #if distance_y<matched_y_abs_thres and distance_x < matched_x_max_thres and distance_x > matched_x_min_thres:
-        pt_a = (int(kpt_cut[i][1]), int(kpt_cut[i][0] + hdif))
-        pt_b = (int(kpi_cut[i][1] + w2), int(kpi_cut[i][0]))
-        cv2.line(newimg, pt_a, pt_b, (255, 0, 0))
-        cv2.circle(newimg, pt_a, 3, (147,20,255), -1)
-        cv2.circle(newimg, pt_b, 3, (147,20,255), -1)
-        sum+=1
+        if distance_y<matched_y_abs_thres and distance_x < matched_x_max_thres and distance_x > matched_x_min_thres:
+            pt_a = (int(kpt_cut[i][1]), int(kpt_cut[i][0] + hdif))
+            pt_b = (int(kpi_cut[i][1] + w2), int(kpi_cut[i][0]))
+            cv2.line(newimg, pt_a, pt_b, (255, 0, 0))
+            cv2.circle(newimg, pt_a, 3, (147,20,255), -1)
+            cv2.circle(newimg, pt_b, 3, (147,20,255), -1)
+            sum+=1
     cv2.imwrite('matches.jpg', newimg)
     return sum

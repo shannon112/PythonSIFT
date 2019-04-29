@@ -22,5 +22,5 @@ keypints2, descriptors2 = sift_detector(img2)
 print ' | | | {} features are extracted'.format(str(len(descriptors1))); sys.stdout.flush()
 
 print ' | Feature matching .... '; sys.stdout.flush()
-matched_pairs_num = sift_matching(img1, img2 , keypints1, descriptors1, keypints2, descriptors2)
+matched_pairs_num = sift_matching_BT(img1, img2 , keypints1, descriptors1, keypints2, descriptors2)
 print ' | | ' + str(matched_pairs_num) + ' features matched.'; sys.stdout.flush()
