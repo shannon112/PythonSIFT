@@ -9,30 +9,25 @@ import sys
 import constant as const
 import cv2
 
-# INPUTS: imagename (filename of image, string)
-#         threshold (constrast threshold, int or float)
-# OUTPUT: keypoints (an array of four column, where the first is the x location, the second is the y location, the third is the scale, and the fourth is the orientation)
-#         descriptors (an array of 128 columns, which correspond to the SIFT descriptor)
 """
-End to end alignment
+SIFT feature detecting and discriping
 
 Args:
-    img: panoramas image array
-    shifts: all shifts for each image in panoramas
+    imagename: image name
 
 Returns:
-    Aligned image array
+    [keypoints, descriptors]
+    keypoints (an array of four column, where the first is the x location, the second is the y location, the third is the scale, and the fourth is the orientation)
+    descriptors (an array of 128 columns, which correspond to the SIFT descriptor)
+    n is extracted features number
 """
 def sift_detector(imagename):
-    # SIFT Detector
-    #--------------
-    threshold = const.SIFT_THRESHOLD
-    original = ndimage.imread(imagename, flatten=True)
-
     # SIFT Parameters
+    threshold = const.SIFT_THRESHOLD #Set to at least 1, best is 5
     s = 3
     k = 2 ** (1.0 / s)
-    # threshold variable is the contrast threshold. Set to at least 1
+
+    original = ndimage.imread(imagename, flatten=True)
 
     # Standard deviations for Gaussian smoothing
     kvec1 = np.array([1.3, 1.6, 1.6 * k, 1.6 * (k ** 2), 1.6 * (k ** 3), 1.6 * (k ** 4)])
@@ -42,10 +37,10 @@ def sift_detector(imagename):
     kvectotal = np.array([1.6, 1.6 * k, 1.6 * (k ** 2), 1.6 * (k ** 3), 1.6 * (k ** 4), 1.6 * (k ** 5), 1.6 * (k ** 6), 1.6 * (k ** 7), 1.6 * (k ** 8), 1.6 * (k ** 9), 1.6 * (k ** 10), 1.6 * (k ** 11)])
 
     # Downsampling images
-    doubled = misc.imresize(original, 200, 'bilinear').astype(int)
-    normal = misc.imresize(doubled, 50, 'bilinear').astype(int)
-    halved = misc.imresize(normal, 50, 'bilinear').astype(int)
-    quartered = misc.imresize(halved, 50, 'bilinear').astype(int)
+    doubled = misc.imresize(original, 200, 'bilinear').astype(int) # 2x
+    normal = misc.imresize(doubled, 50, 'bilinear').astype(int) # 1x
+    halved = misc.imresize(normal, 50, 'bilinear').astype(int) # 0.5x
+    quartered = misc.imresize(halved, 50, 'bilinear').astype(int) # 0.25x
 
     # Initialize Gaussian pyramids
     pyrlvl1 = np.zeros((doubled.shape[0], doubled.shape[1], 6))
@@ -57,10 +52,10 @@ def sift_detector(imagename):
 
     # Construct Gaussian pyramids
     for i in range(0, 6):
-	pyrlvl1[:,:,i] = ndimage.filters.gaussian_filter(doubled, kvec1[i])
-	pyrlvl2[:,:,i] = misc.imresize(ndimage.filters.gaussian_filter(doubled, kvec2[i]), 50, 'bilinear')
-	pyrlvl3[:,:,i] = misc.imresize(ndimage.filters.gaussian_filter(doubled, kvec3[i]), 25, 'bilinear')
-	pyrlvl4[:,:,i] = misc.imresize(ndimage.filters.gaussian_filter(doubled, kvec4[i]), 1.0 / 8.0, 'bilinear')
+        pyrlvl1[:,:,i] = ndimage.filters.gaussian_filter(doubled, kvec1[i])
+        pyrlvl2[:,:,i] = misc.imresize(ndimage.filters.gaussian_filter(doubled, kvec2[i]), 50, 'bilinear')
+        pyrlvl3[:,:,i] = misc.imresize(ndimage.filters.gaussian_filter(doubled, kvec3[i]), 25, 'bilinear')
+        pyrlvl4[:,:,i] = misc.imresize(ndimage.filters.gaussian_filter(doubled, kvec4[i]), 1.0 / 8.0, 'bilinear')
 
     # Initialize Difference-of-Gaussians (DoG) pyramids
     diffpyrlvl1 = np.zeros((doubled.shape[0], doubled.shape[1], 5))
@@ -70,10 +65,10 @@ def sift_detector(imagename):
 
     # Construct DoG pyramids
     for i in range(0, 5):
-	diffpyrlvl1[:,:,i] = pyrlvl1[:,:,i+1] - pyrlvl1[:,:,i]
-	diffpyrlvl2[:,:,i] = pyrlvl2[:,:,i+1] - pyrlvl2[:,:,i]
-	diffpyrlvl3[:,:,i] = pyrlvl3[:,:,i+1] - pyrlvl3[:,:,i]
-	diffpyrlvl4[:,:,i] = pyrlvl4[:,:,i+1] - pyrlvl4[:,:,i]
+        diffpyrlvl1[:,:,i] = pyrlvl1[:,:,i+1] - pyrlvl1[:,:,i]
+        diffpyrlvl2[:,:,i] = pyrlvl2[:,:,i+1] - pyrlvl2[:,:,i]
+        diffpyrlvl3[:,:,i] = pyrlvl3[:,:,i+1] - pyrlvl3[:,:,i]
+        diffpyrlvl4[:,:,i] = pyrlvl4[:,:,i+1] - pyrlvl4[:,:,i]
 
     # Initialize pyramids to store extrema locations
     extrpyrlvl1 = np.zeros((doubled.shape[0], doubled.shape[1], 3))
@@ -84,52 +79,55 @@ def sift_detector(imagename):
     sys.stdout.write(" | | Starting extrema detection...\n"); sys.stdout.flush()
     sys.stdout.write(" | | First octave...  ");sys.stdout.flush()
 
-    # In each of the following for loops, elements of each pyramids that are larger or smaller than its 26 immediate neighbors in space and scale are labeled as extrema. As explained in section 4 of Lowe's paper, these initial extrema are pruned by checking that their contrast and curvature are above certain thresholds. The thresholds used here are those suggested by Lowe.
+    # In each of the following for loops, elements of each pyramids that are larger or smaller than
+    # its 26 immediate neighbors in space and scale are labeled as extrema. As explained in section 4
+    # of Lowe's paper, these initial extrema are pruned by checking that their contrast and curvature
+    # are above certain thresholds. The thresholds used here are those suggested by Lowe.
+
+    iter_params = [80,40,20,10]
+    diffpyrlvls = [diffpyrlvl1,diffpyrlvl2,diffpyrlvl3,diffpyrlvl4]
 
     for i in range(1, 4):
-	for j in range(80, doubled.shape[0] - 80):
-	    for k in range(80, doubled.shape[1] - 80):
-		if np.absolute(diffpyrlvl1[j, k, i]) < threshold:
-		    continue
+        for j in range(80, doubled.shape[0] - 80):
+            for k in range(80, doubled.shape[1] - 80):
+                if np.absolute(diffpyrlvl1[j, k, i]) < threshold:
+                    continue
+                maxbool = (diffpyrlvl1[j, k, i] > 0)
+                minbool = (diffpyrlvl1[j, k, i] < 0)
 
-		maxbool = (diffpyrlvl1[j, k, i] > 0)
-		minbool = (diffpyrlvl1[j, k, i] < 0)
+                for di in range(-1, 2):
+                    for dj in range(-1, 2):
+                        for dk in range(-1, 2):
+                            if di == 0 and dj == 0 and dk == 0:
+                                continue
+                            maxbool = maxbool and (diffpyrlvl1[j, k, i] > diffpyrlvl1[j + dj, k + dk, i + di])
+                            minbool = minbool and (diffpyrlvl1[j, k, i] < diffpyrlvl1[j + dj, k + dk, i + di])
+                            if not maxbool and not minbool:
+                                break
+                        if not maxbool and not minbool:
+                            break
+                    if not maxbool and not minbool:
+                        break
 
-		for di in range(-1, 2):
-		    for dj in range(-1, 2):
-			for dk in range(-1, 2):
-			    if di == 0 and dj == 0 and dk == 0:
-				continue
-			    maxbool = maxbool and (diffpyrlvl1[j, k, i] > diffpyrlvl1[j + dj, k + dk, i + di])
-			    minbool = minbool and (diffpyrlvl1[j, k, i] < diffpyrlvl1[j + dj, k + dk, i + di])
-			    if not maxbool and not minbool:
-				break
+                if maxbool or minbool:
+                    dx = (diffpyrlvl1[j, k+1, i] - diffpyrlvl1[j, k-1, i]) * 0.5 / 255
+                    dy = (diffpyrlvl1[j+1, k, i] - diffpyrlvl1[j-1, k, i]) * 0.5 / 255
+                    ds = (diffpyrlvl1[j, k, i+1] - diffpyrlvl1[j, k, i-1]) * 0.5 / 255
+                    dxx = (diffpyrlvl1[j, k+1, i] + diffpyrlvl1[j, k-1, i] - 2 * diffpyrlvl1[j, k, i]) * 1.0 / 255
+                    dyy = (diffpyrlvl1[j+1, k, i] + diffpyrlvl1[j-1, k, i] - 2 * diffpyrlvl1[j, k, i]) * 1.0 / 255
+                    dss = (diffpyrlvl1[j, k, i+1] + diffpyrlvl1[j, k, i-1] - 2 * diffpyrlvl1[j, k, i]) * 1.0 / 255
+                    dxy = (diffpyrlvl1[j+1, k+1, i] - diffpyrlvl1[j+1, k-1, i] - diffpyrlvl1[j-1, k+1, i] + diffpyrlvl1[j-1, k-1, i]) * 0.25 / 255
+                    dxs = (diffpyrlvl1[j, k+1, i+1] - diffpyrlvl1[j, k-1, i+1] - diffpyrlvl1[j, k+1, i-1] + diffpyrlvl1[j, k-1, i-1]) * 0.25 / 255
+                    dys = (diffpyrlvl1[j+1, k, i+1] - diffpyrlvl1[j-1, k, i+1] - diffpyrlvl1[j+1, k, i-1] + diffpyrlvl1[j-1, k, i-1]) * 0.25 / 255
 
-			if not maxbool and not minbool:
-			    break
+                    dD = np.matrix([[dx], [dy], [ds]])
+                    H = np.matrix([[dxx, dxy, dxs], [dxy, dyy, dys], [dxs, dys, dss]])
+                    x_hat = numpy.linalg.lstsq(H, dD,rcond=None)[0]
+                    D_x_hat = diffpyrlvl1[j, k, i] + 0.5 * np.dot(dD.transpose(), x_hat)
 
-		    if not maxbool and not minbool:
-			break
-
-		if maxbool or minbool:
-		    dx = (diffpyrlvl1[j, k+1, i] - diffpyrlvl1[j, k-1, i]) * 0.5 / 255
-		    dy = (diffpyrlvl1[j+1, k, i] - diffpyrlvl1[j-1, k, i]) * 0.5 / 255
-		    ds = (diffpyrlvl1[j, k, i+1] - diffpyrlvl1[j, k, i-1]) * 0.5 / 255
-		    dxx = (diffpyrlvl1[j, k+1, i] + diffpyrlvl1[j, k-1, i] - 2 * diffpyrlvl1[j, k, i]) * 1.0 / 255
-		    dyy = (diffpyrlvl1[j+1, k, i] + diffpyrlvl1[j-1, k, i] - 2 * diffpyrlvl1[j, k, i]) * 1.0 / 255
-		    dss = (diffpyrlvl1[j, k, i+1] + diffpyrlvl1[j, k, i-1] - 2 * diffpyrlvl1[j, k, i]) * 1.0 / 255
-		    dxy = (diffpyrlvl1[j+1, k+1, i] - diffpyrlvl1[j+1, k-1, i] - diffpyrlvl1[j-1, k+1, i] + diffpyrlvl1[j-1, k-1, i]) * 0.25 / 255
-		    dxs = (diffpyrlvl1[j, k+1, i+1] - diffpyrlvl1[j, k-1, i+1] - diffpyrlvl1[j, k+1, i-1] + diffpyrlvl1[j, k-1, i-1]) * 0.25 / 255
-		    dys = (diffpyrlvl1[j+1, k, i+1] - diffpyrlvl1[j-1, k, i+1] - diffpyrlvl1[j+1, k, i-1] + diffpyrlvl1[j-1, k, i-1]) * 0.25 / 255
-
-		    dD = np.matrix([[dx], [dy], [ds]])
-		    H = np.matrix([[dxx, dxy, dxs], [dxy, dyy, dys], [dxs, dys, dss]])
-		    x_hat = numpy.linalg.lstsq(H, dD,rcond=None)[0]
-		    D_x_hat = diffpyrlvl1[j, k, i] + 0.5 * np.dot(dD.transpose(), x_hat)
-
-		    r = 10.0
-		    if ((((dxx + dyy) ** 2) * r) < (dxx * dyy - (dxy ** 2)) * (((r + 1) ** 2))) and (np.absolute(x_hat[0]) < 0.5) and (np.absolute(x_hat[1]) < 0.5) and (np.absolute(x_hat[2]) < 0.5) and (np.absolute(D_x_hat) > 0.03):
-			extrpyrlvl1[j, k, i - 1] = 1
+                    r = 10.0
+                    if ((((dxx + dyy) ** 2) * r) < (dxx * dyy - (dxy ** 2)) * (((r + 1) ** 2))) and (np.absolute(x_hat[0]) < 0.5) and (np.absolute(x_hat[1]) < 0.5) and (np.absolute(x_hat[2]) < 0.5) and (np.absolute(D_x_hat) > 0.03):
+                        extrpyrlvl1[j, k, i - 1] = 1
 
     print "num of extrema : %d" % np.sum(extrpyrlvl1)
     sys.stdout.write(" | | Second octave...  "); sys.stdout.flush()
