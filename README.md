@@ -36,3 +36,15 @@ from siftdetector import detect_keypoints
 [keypoints, descriptors] = detect_keypoints(imagename, threshold)
 ```
 where ```imagename``` and ```threshold``` are defined as above, ```keypoints``` is an ```n``` by ```4``` numpy array that holds the ```n``` keypoints (the first column is the image row coordinate, the second column is the image column coordinate, the third column is the scale, and the fourth column is the orientation as a bin index), and descriptors is an ```n``` by ```128``` numpy array where each row is the SIFT descriptor for the respective keypoint.
+
+
+# Comparison of SIFT_THRESHOLD
+All results use brute force feature matching  
+SIFT_THRESHOLD = 3, 1757 features are extracted at each image  
+<img src="https://github.com/shannon112/PythonSIFT/blob/master/feature/0_features_3_1757.jpg" width="200"> <img src="https://github.com/shannon112/PythonSIFT/blob/master/feature/1_features_3_1757.jpg" width="200"> <img src="https://github.com/shannon112/PythonSIFT/blob/master/feature/matches_3.jpg" width="400">
+
+SIFT_THRESHOLD = 5, 900 features are extracted at each image  
+<img src="https://github.com/shannon112/PythonSIFT/blob/master/feature/0_features_5_900.jpg" width="200"> <img src="https://github.com/shannon112/PythonSIFT/blob/master/feature/1_features_5_900.jpg" width="200"> <img src="https://github.com/shannon112/PythonSIFT/blob/master/feature/matches_5.jpg" width="400">
+
+SIFT_THRESHOLD = 10, 351 features are extracted at each image  
+<img src="https://github.com/shannon112/PythonSIFT/blob/master/feature/0_features_10_351.jpg" width="200"> <img src="https://github.com/shannon112/PythonSIFT/blob/master/feature/1_features_10_351.jpg" width="200"> <img src="https://github.com/shannon112/PythonSIFT/blob/master/feature/matches_10.jpg" width="400">
