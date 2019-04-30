@@ -51,14 +51,14 @@ SIFT_THRESHOLD = 10, 351 features are extracted at each image
 
 # Comparison of feature matching method
 All results use SIFT_THRESHOLD=5  
-Brute force w/ constraints
+Brute force w/ constraints  
 <img src="https://github.com/shannon112/PythonSIFT/blob/master/result_bt/0_features.jpg" width="200"> <img src="https://github.com/shannon112/PythonSIFT/blob/master/result_bt/1_features.jpg" width="200"> <img src="https://github.com/shannon112/PythonSIFT/blob/master/result_bt/matches.jpg" width="400">
 
-Brute force w/o constraints
+Brute force w/o constraints  
 <img src="https://github.com/shannon112/PythonSIFT/blob/master/result_bt_woRevised/0_features.jpg" width="200"> <img src="https://github.com/shannon112/PythonSIFT/blob/master/result_bt_woRevised/1_features.jpg" width="200"> <img src="https://github.com/shannon112/PythonSIFT/blob/master/result_bt_woRevised/matches.jpg" width="400">
 
-flann w/ constraints
+flann w/ constraints  
 <img src="https://github.com/shannon112/PythonSIFT/blob/master/result_flann/0_features.jpg" width="200"> <img src="https://github.com/shannon112/PythonSIFT/blob/master/result_flann/1_features.jpg" width="200"> <img src="https://github.com/shannon112/PythonSIFT/blob/master/result_flann/matches.jpg" width="400">
 
-flann force w/o constraints
+flann force w/o constraints  
 <img src="https://github.com/shannon112/PythonSIFT/blob/master/result_flann_woRevised/0_features.jpg" width="200"> <img src="https://github.com/shannon112/PythonSIFT/blob/master/result_flann_woRevised/1_features.jpg" width="200"> <img src="https://github.com/shannon112/PythonSIFT/blob/master/result_flann_woRevised/matches.jpg" width="400">
