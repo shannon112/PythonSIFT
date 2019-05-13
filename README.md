@@ -5,7 +5,7 @@ This is an implementation of SIFT done entirely in Python with the help of NumPy
 requirement
 ```
 Python 2.7.15
-opencv-python==3.4.2.16
+opencv-python==3.4.2.16   (flann would use it)
 numpy==1.16.2
 scipy, PIL
 ```
