@@ -1,4 +1,4 @@
-# PythonSIFT
+# python2_SIFT
 
 This is an implementation of SIFT done entirely in Python with the help of NumPy. 
 
